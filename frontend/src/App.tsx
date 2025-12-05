@@ -6,10 +6,13 @@ import {
   getAllowedBoardIndexes,
 } from './game/core';
 
+type Theme = 'light' | 'dark';
+
 function App() {
   const [game, setGame] = useState<GameState>(() =>
     createInitialGameState('normal'),
   );
+  const [theme, setTheme] = useState<Theme>('dark');
 
   const allowedBoards = getAllowedBoardIndexes(game);
 
@@ -17,69 +20,65 @@ function App() {
     setGame((prev) => applyMove(prev, boardIndex, cellIndex));
   };
 
-  return (
-    <div style={{ padding: '1rem', fontFamily: 'system-ui' }}>
-      <h1>Ultimate TTT</h1>
-      <p>
-        Jogador da vez:{' '}
-        <strong>{game.currentPlayer === 'X' ? 'Jogador 1' : 'Jogador 2'}</strong>
-      </p>
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '8px',
-          maxWidth: 600,
-        }}
-      >
+  const isCircleTurn = game.currentPlayer === 'O';
+  const currentLabel = isCircleTurn ? 'Vez do Círculo' : 'Vez do X';
+  const currentPlayerClass = isCircleTurn
+    ? 'current-player current-player--circle'
+    : 'current-player current-player--x';
+
+  return (
+    <div className={`app app--${theme}`}>
+      <button className="theme-toggle" onClick={toggleTheme}>
+        Tema: {theme === 'dark' ? 'Escuro' : 'Claro'}
+      </button>
+
+      <h1 className="app-title">Ultimate TTT</h1>
+
+      <div className={currentPlayerClass}>{currentLabel}</div>
+
+      <div className="board">
         {game.macroBoard.boards.map((board, boardIndex) => {
           const isAllowed = allowedBoards.includes(boardIndex);
+          const winner = board.winner;
+
+          let microClasses = 'micro-board';
+          if (isAllowed) microClasses += ' micro-board--allowed';
+          if (winner === 'X') microClasses += ' micro-board--winner-X';
+          if (winner === 'O') microClasses += ' micro-board--winner-O';
+
           return (
-            <div
-              key={boardIndex}
-              style={{
-                border: '2px solid',
-                borderColor: isAllowed ? 'green' : '#ccc',
-                opacity: isAllowed ? 1 : 0.5,
-                padding: '4px',
-              }}
-            >
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '4px',
-                }}
-              >
-                {board.cells.map((cell, cellIndex) => (
-                  <button
-                    key={cellIndex}
-                    style={{
-                      aspectRatio: '1 / 1',
-                      width: '100%',
-                      fontSize: '1.5rem',
-                    }}
-                    onClick={() => handleCellClick(boardIndex, cellIndex)}
-                  >
-                    {cell ?? ''}
-                  </button>
-                ))}
+            <div key={boardIndex} className={microClasses}>
+              <div className="micro-board-grid">
+                {board.cells.map((cell, cellIndex) => {
+                  let cellClass = 'cell-btn';
+                  if (cell === 'X') cellClass += ' cell-btn--X';
+                  if (cell === 'O') cellClass += ' cell-btn--O';
+
+                  return (
+                    <button
+                      key={cellIndex}
+                      className={cellClass}
+                      onClick={() => handleCellClick(boardIndex, cellIndex)}
+                    >
+                      {cell ?? ''}
+                    </button>
+                  );
+                })}
               </div>
-              {board.winner && (
-                <div style={{ marginTop: '4px', textAlign: 'center' }}>
-                  <strong>Vencedor: {board.winner}</strong>
-                </div>
-              )}
             </div>
           );
         })}
       </div>
 
       {game.isGameOver && game.macroBoard.winner && (
-        <p style={{ marginTop: '1rem', fontWeight: 'bold' }}>
-          Fim de jogo! Vencedor no macro: {game.macroBoard.winner}
-        </p>
+        <div className="game-over">
+          Fim de jogo! Venceu o{' '}
+          {game.macroBoard.winner === 'O' ? 'Círculo' : 'X'}
+        </div>
       )}
     </div>
   );
