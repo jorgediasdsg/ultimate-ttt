@@ -8,6 +8,9 @@ Projeto de estudo e vitrine técnica: implementação do “Jogo da Velha 2.0”
 
 Neste momento, o jogo já roda em **modo local** no navegador, com tema light/dark e visual em estilo **neon** para X e Círculo.
 
+## Demo
+
+[Demo do jogo](https://jorgediasdsg.github.io/ultimate-ttt/)
 ---
 
 ## Objetivos do projeto
