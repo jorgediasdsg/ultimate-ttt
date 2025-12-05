@@ -12,6 +12,8 @@ body,
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     sans-serif;
+  overflow: hidden;
+  /* sem scroll */
 }
 
 /* ocupa a tela inteira, conteúdo centralizado */
@@ -22,6 +24,7 @@ body {
   align-items: center;
   justify-content: center;
   transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
 }
 
 .app--light {
@@ -34,43 +37,46 @@ body {
   color: #f5f5f5;
 }
 
-/* container central – aumenta o limite pra aproveitar mais a largura */
+/* container central */
 .app-inner {
   width: 100%;
   max-width: 1200px;
-  padding: 2rem clamp(1rem, 4vw, 3rem);
+  padding: 1.5rem clamp(1rem, 4vw, 3rem);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 1.25rem;
 }
 
-.theme-toggle {
-  align-self: flex-end;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  backdrop-filter: blur(8px);
-  color: inherit;
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.12s ease,
-    background-color 0.12s ease,
-    border-color 0.12s ease;
+/* HEADER: título à esquerda, botões no meio, status à direita */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.app--light .theme-toggle {
-  background: #ffffff;
-  border-color: #ccc;
+.header-left,
+.header-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
 }
 
-.theme-toggle:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.25);
+.header-left {
+  justify-content: flex-start;
+}
+
+.header-right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 /* título em neon verde */
@@ -84,14 +90,54 @@ body {
     0 0 26px rgba(0, 255, 140, 0.6);
 }
 
-.current-player {
-  font-size: clamp(1.4rem, 2.5vw, 1.8rem);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  text-align: center;
+/* botões minimalistas (tema + info) */
+.icon-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background-color 0.12s ease,
+    border-color 0.12s ease;
 }
 
-.current-player--circle {
+.app--light .icon-button {
+  background: #ffffff;
+  border-color: #ccc;
+}
+
+.icon-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.25);
+}
+
+.icon-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.icon-button--info {
+  font-weight: 700;
+}
+
+/* status do jogo */
+.status-message {
+  font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.status-message--circle {
   color: #ff4d4d;
   text-shadow:
     0 0 4px rgba(255, 77, 77, 0.9),
@@ -99,7 +145,7 @@ body {
     0 0 22px rgba(255, 0, 0, 0.6);
 }
 
-.current-player--x {
+.status-message--x {
   color: #4da3ff;
   text-shadow:
     0 0 4px rgba(77, 163, 255, 0.9),
@@ -107,9 +153,26 @@ body {
     0 0 22px rgba(0, 128, 255, 0.6);
 }
 
+/* fim de jogo / velha: dourado */
+.status-message--end {
+  color: #ffd966;
+  text-shadow:
+    0 0 6px rgba(255, 217, 102, 0.9),
+    0 0 16px rgba(255, 217, 102, 0.7),
+    0 0 28px rgba(255, 191, 0, 0.6);
+}
+
+/* main: garante que o tabuleiro use o espaço vertical sem gerar scroll */
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* BOARD: centralizado, usando boa parte da tela */
 .board {
-  width: min(90vmin, 90vw);
+  width: min(80vmin, 95vw);
   aspect-ratio: 1 / 1;
   margin: 0 auto;
   display: grid;
@@ -135,7 +198,7 @@ body {
   border-color: #ccc;
 }
 
-/* estado de vencedor – brilho sutil por padrão */
+/* estado de vencedor – leve */
 .micro-board--winner-X {
   border-color: #4da3ff;
 }
@@ -219,16 +282,102 @@ body {
     0 0 18px rgba(255, 0, 0, 0.7);
 }
 
-.game-over {
-  margin-top: 0.75rem;
+/* CONFETTI */
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 20;
+}
+
+.confetti--x {
+  --confetti-color: #4da3ff;
+}
+
+.confetti--circle {
+  --confetti-color: #ff4d4d;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -10%;
+  width: 6px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--confetti-color);
+  opacity: 0.9;
+  animation: confetti-fall 2.8s linear infinite;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, -10%, 0) rotateZ(0deg);
+  }
+
+  100% {
+    transform: translate3d(0, 120vh, 0) rotateZ(360deg);
+  }
+}
+
+/* MODAL DE REGRAS */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+}
+
+.modal {
+  width: min(90vw, 520px);
+  max-height: 80vh;
+  background: #111;
+  color: #f5f5f5;
+  border-radius: 16px;
+  padding: 1.2rem 1.4rem;
+  box-sizing: border-box;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.modal-title {
+  margin: 0;
   font-size: 1.1rem;
-  font-weight: 700;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  text-shadow:
-    0 0 4px rgba(255, 255, 255, 0.9),
-    0 0 12px rgba(255, 255, 255, 0.7);
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.modal-body {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  overflow-y: auto;
+}
+
+.modal-body ol {
+  padding-left: 1.1rem;
+  margin: 0.25rem 0 0;
 }
 
 /* pequenos ajustes para telas menores */
@@ -237,7 +386,15 @@ body {
     padding-inline: 1rem;
   }
 
-  .theme-toggle {
-    font-size: 0.8rem;
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .header-left,
+  .header-right {
+    justify-content: center;
+    text-align: center;
   }
 }

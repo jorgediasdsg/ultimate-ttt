@@ -22,6 +22,7 @@ export interface GameState {
   nextForcedBoardIndex: number | null; // null = pode jogar em qualquer board não cheio
   totalMoves: number;
   isGameOver: boolean;
+  isDraw: boolean;
   mode: GameMode;
 }
 
@@ -54,6 +55,7 @@ export function createInitialGameState(mode: GameMode = 'normal'): GameState {
     nextForcedBoardIndex: null,
     totalMoves: 0,
     isGameOver: false,
+    isDraw: false,
     mode,
   };
 }
@@ -148,11 +150,17 @@ export function applyMove(
   });
 
   const macroWinner = computeMacroWinner(newBoards);
+  const macroFull = newBoards.every((b) => b.isFull);
+  const isDraw = !macroWinner && macroFull;
+  const isGameOver = macroWinner !== null || isDraw;
 
-  // calcula para onde o próximo jogador deveria ser enviado
-  const targetBoard = newBoards[cellIndex];
-  const nextForcedBoardIndex =
-    !macroWinner && targetBoard && !targetBoard.isFull ? cellIndex : null;
+  let nextForcedBoardIndex: number | null = null;
+  if (!isGameOver) {
+    const targetBoard = newBoards[cellIndex];
+    if (targetBoard && !targetBoard.isFull) {
+      nextForcedBoardIndex = cellIndex;
+    }
+  }
 
   const nextPlayer: Player = currentPlayer === 'X' ? 'O' : 'X';
 
@@ -164,7 +172,8 @@ export function applyMove(
     currentPlayer: nextPlayer,
     nextForcedBoardIndex,
     totalMoves: state.totalMoves + 1,
-    isGameOver: macroWinner !== null,
+    isGameOver,
+    isDraw,
     mode: state.mode,
   };
 
