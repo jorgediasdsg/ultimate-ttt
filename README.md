@@ -1,4 +1,3 @@
-```md
 # Ultimate TTT – Jogo da Velha 2.0 em Go + React
 
 Projeto de estudo e vitrine técnica: implementação do “Jogo da Velha 2.0” (Ultimate Tic-Tac-Toe) usando **Go** no backend (monolito planejado) e **React + Vite** no frontend, com foco em:
@@ -378,5 +377,3 @@ A ideia é que o repositório sirva tanto como jogo divertido quanto como materi
 - como decisões são tomadas;
 - como o código é estruturado;
 - como o sistema se prepara para crescer sem explodir em complexidade.
-
-```
