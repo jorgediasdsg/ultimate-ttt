@@ -1,342 +1,382 @@
+```md
 # Ultimate TTT – Jogo da Velha 2.0 em Go + React
 
-Projeto de estudo e vitrine técnica: uma implementação do “Ultimate Tic-Tac-Toe” (Jogo da Velha 2.0) usando **Go** no backend e **React** no frontend, com foco em boas práticas, arquitetura limpa e espaço claro para evoluir para **multiplayer** e **bot com IA** no futuro.
+Projeto de estudo e vitrine técnica: implementação do “Jogo da Velha 2.0” (Ultimate Tic-Tac-Toe) usando **Go** no backend (monolito planejado) e **React + Vite** no frontend, com foco em:
+
+- arquitetura limpa;
+- documentação por ADRs;
+- espaço explícito para evoluir para **multiplayer** e **bot com IA**.
+
+Neste momento, o jogo já roda em **modo local** no navegador, com tema light/dark e visual em estilo **neon** para X e Círculo.
 
 ---
 
-## Objetivos
+## Objetivos do projeto
 
-* Treinar e demonstrar proficiência em:
-
-  * **Go** (estrutura de projeto, servidor HTTP, organização em `cmd/` e `internal/`, ADRs).
-  * **React** (estado do jogo, UX, uso de `localStorage`).
-  * Criar uma base que hoje funciona em **modo local** (single device) e esteja preparada para:
-
-  * **multiplayer** via servidor Go remoto;
-  * **jogador vs bot** com lógica de IA no backend.
-* Entregar um repositório que um recrutador/tech lead consiga ler e ver:
-
-  * disciplina arquitetural;
-  * clareza de decisões;
-  * código jogável, não só slide bonito.
+- Demonstrar proficiência em:
+  - **Go** (estrutura de projeto, monólito organizado, preparo para multiplayer/IA).
+  - **React** (estado complexo, interação fluida, uso de `localStorage`).
+- Construir uma base que:
+  - **hoje**: funcione em **single device** (2 jogadores na mesma tela, lógica no frontend);
+  - **amanhã**: aceite conexão com servidor Go remoto para:
+    - multiplayer;
+    - partidas contra bot/IA.
+- Entregar um repositório que recrutadores, devs sênior e tech leads possam abrir e enxergar:
+  - clareza arquitetural;
+  - decisões bem justificadas;
+  - código jogável, não apenas boilerplate.
 
 ---
 
-## Regras do jogo (Ultimate TTT – Jogo da Velha 2.0)
+## Estado atual (Fase 1 – Modo local, lógica no frontend)
 
-* Tabuleiro **macro** 3×3 (9 macro-campos).
-* Cada macro-campo contém um **micro-tabuleiro** 3×3 (9 micro-casas).
-* Jogador 1 começa podendo jogar em **qualquer micro-casa de qualquer micro-tabuleiro**.
-* A posição em que o jogador joga (ex.: canto superior esquerdo, centro, etc.) define **em qual macro-campo** o próximo jogador é obrigado a jogar.
-* Quando um jogador vence um micro-tabuleiro, o macro-campo correspondente é marcado para aquele jogador no tabuleiro macro.
-* O micro-tabuleiro continua recebendo jogadas até encher, mesmo depois de “ganho”.
-* Vence a partida quem completar uma linha/coluna/diagonal no **tabuleiro macro**.
-* Se o macro-campo para onde o próximo jogador deveria jogar **já estiver cheio**, ele pode jogar em **qualquer casa livre** do tabuleiro.
-* No início do jogo:
+- **Lógica de jogo** implementada em TypeScript:
 
-  * são perguntados os nomes dos dois jogadores;
-  * os nomes são salvos em cache (localStorage) para próximas partidas.
-* A UI mostra sempre **quem é o jogador da vez**, usando os nomes informados.
+  - Arquivo principal de domínio:  
+    `frontend/src/game/core.ts`
 
-### Ranking
+  - Responsável por:
+    - estado do tabuleiro macro 3×3;
+    - estado dos 9 micro-tabuleiros 3×3;
+    - regra de “envio” da jogada para o próximo micro-tabuleiro;
+    - detecção de vitória no macro-tabuleiro;
+    - checagem de jogadas legais.
 
-* Salvo em `localStorage`.
-* Para cada partida, registra:
+- **Interface React**:
 
-  * vencedor;
-  * perdedor;
-  * quantidade de lances.
-* Ranking ordenado por **vitórias com menos lances**.
+  - Arquivo principal:  
+    `frontend/src/App.tsx`
 
-### Modo sobrevivência
+  - Responsável por:
+    - renderizar o tabuleiro macro/micro;
+    - integrar cliques no tabuleiro com a lógica de domínio (`applyMove`);
+    - destacar o tabuleiro onde é permitido jogar;
+    - exibir o jogador da vez como:
+      - **“Vez do Círculo”** (O) – vermelho neon;
+      - **“Vez do X”** (X) – azul neon;
+    - oferecer botão de **toggle entre tema claro/escuro**.
 
-* Modo opcional.
-* Quando habilitado:
+- **Visual / UX**:
 
-  * cada jogador tem **10 segundos** para jogar;
-  * se o tempo estourar, a vez é automaticamente passada para o outro jogador.
+  - Tema **light/dark** com botão:
+    - `app--light` (fundo claro);
+    - `app--dark` (fundo escuro com gradiente).
+  - Estilo **neon**:
+    - Círculo (O) em vermelho neon;
+    - X em azul neon;
+    - micro-tabuleiros destacados quando são o destino obrigatório da próxima jogada.
+  - Layout estável:
+    - uso de `aspect-ratio` nas células;
+    - remoção de elementos que “inflam” o bloco ao clicar;
+    - micro-tabuleiros não mudam de tamanho quando uma jogada é feita.
+
+> Ainda **não** implementado nesta fase:
+> - nomes dos jogadores com cache em `localStorage`;
+> - ranking de partidas;
+> - modo sobrevivência (timer de 10 segundos por jogada).
+
+Esses pontos já fazem parte do **roadmap** descrito abaixo.
+
+---
+
+## Regras do jogo (Ultimate Tic-Tac-Toe)
+
+Resumo das regras implementadas/contempladas:
+
+- Tabuleiro **macro** 3×3 (9 macro-campos).
+
+- Cada macro-campo contém um **micro-tabuleiro** 3×3 (9 micro-casas).
+
+- **Primeira jogada**:
+  - Jogador X começa, podendo jogar em **qualquer micro-casa de qualquer micro-tabuleiro**.
+
+- **Regra de envio**:
+  - A posição em que o jogador joga (ex.: canto superior esquerdo, centro, canto inferior direito) define **em qual macro-campo** o próximo jogador é obrigado a jogar:
+    - Exemplo: se X joga na posição “canto superior esquerdo” (índice 0) de qualquer micro-tabuleiro, O é enviado para o macro-campo “canto superior esquerdo”.
+
+- **Vitória no micro-tabuleiro**:
+  - Quando um jogador vence um micro-tabuleiro:
+    - aquele macro-campo é considerado “ganho” por ele no contexto do tabuleiro macro;
+    - o micro-tabuleiro **ainda pode receber jogadas** até encher, para preservar a dinâmica de envio.
+
+- **Vitória no macro-tabuleiro**:
+  - Vence a partida quem completar **linha, coluna ou diagonal** no tabuleiro macro (considerando apenas os macro-campos ganhos).
+
+- **Regra de escape**:
+  - Se o macro-campo para onde o próximo jogador deveria ser enviado **já estiver cheio**, o jogador pode jogar em **qualquer micro-casa livre** do tabuleiro.
+
+- **Modo sobrevivência (planejado)**:
+  - Quando habilitado:
+    - cada jogador terá 10 segundos por jogada;
+    - se o tempo estourar, a vez passa para o outro jogador.
+
+- **Ranking (planejado)**:
+  - Salvo em `localStorage`;
+  - registra:
+    - vencedor;
+    - perdedor;
+    - quantidade de lances;
+  - ranking ordenado por vitórias com menos lances.
 
 ---
 
 ## Stack
 
-### Backend (Go)
+### Backend (Go) – planejado / em construção
 
-* Go >= 1.22
-* `net/http` para o servidor HTTP.
-* `embed` para servir o build do React como arquivos estáticos.
-* Estrutura monolítica organizada:
+- Linguagem: **Go >= 1.22**
+- HTTP server: `net/http`
+- Servir frontend: `embed` para incorporar o build do React no binário
+- Estrutura planejada (pode variar levemente, mas a intenção é esta):
 
-  * `cmd/server` – ponto de entrada da aplicação.
-  * `internal/http` – servidor, rotas, handlers.
-  * `internal/game` – (futuro) engine de jogo para multiplayer/IA.
-  * `internal/ai` – (futuro) bot de jogo.
+```text
+backend/
+  cmd/server/main.go        # ponto de entrada do servidor Go
+  internal/http/            # servidor, rotas, handlers (health, static e futuro API)
+  internal/game/            # engine de jogo server-side (multiplayer)
+  internal/ai/              # bot/IA para partidas contra máquina
+  docs/adr/                 # Architecture Decision Records
+```
 
-### Frontend (React)
+- Objetivos futuros para o backend:
+  - gerenciar salas de jogo (multiplayer);
+  - validar jogadas no servidor;
+  - intermediar partidas contra bot/IA.
 
-* React + Vite.
-* (Opcional, recomendado) TypeScript.
-* `localStorage` para:
+### Frontend (React + Vite)
 
-  * nomes dos jogadores;
-  * ranking de vitórias.
-* Arquitetura pensada para dois tipos de cliente:
+- **React** para UI e gerenciamento de estado local.
+- **Vite** para desenvolvimento e build:
+  - usando o bundler padrão estável (sem Rolldown nesta fase).
+- **TypeScript** para modelagem forte do domínio (estado do jogo, jogadores, tabuleiros).
 
-  * **LocalGameClient** – implementação atual, com estado todo no browser.
-  * **RemoteGameClient** – futura implementação, falando com o servidor Go (HTTP/WebSocket).
+Organização básica:
 
-### Ferramentas
-
-* Gerenciador de pacotes recomendado: **pnpm**.
-* Alternativa suportada: **npm** (para quem não usa pnpm).
-* Controle de versão: Git + GitHub.
+```text
+frontend/
+  index.html
+  vite.config.ts
+  src/
+    main.tsx
+    App.tsx            # componente principal, UI + integração com core
+    App.css            # tema, neon, layout do tabuleiro
+    game/
+      core.ts          # lógica de domínio do Ultimate TTT
+```
 
 ---
 
-## Estrutura (proposta)
+## Gerenciador de pacotes
 
-Exemplo de estrutura de diretórios (pode variar ligeiramente conforme evolução):
+- **Recomendado**: `pnpm` (instalado globalmente via `npm install -g pnpm`).
+- **Alternativa suportada**: `npm`.
 
-* `backend/`
+Motivos para preferir **pnpm**:
 
-  * `cmd/server/main.go`
-  * `internal/http/…`
-  * `internal/game/…`
-  * `internal/ai/…`
-  * `docs/adr/…`
-* `frontend/`
+1. **Eficiência de disco**  
+   `pnpm` compartilha dependências em um store global, em vez de duplicar pastas inteiras em cada projeto.
 
-  * `index.html`
-  * `src/` (componentes React, lógica de jogo, etc.)
-  * `vite.config.ts` / `vite.config.js`
+2. **Performance**  
+   Instalações repetidas são significativamente mais rápidas em ambientes com vários repositórios.
 
----
+3. **Resolução de módulos mais previsível**  
+   Ajuda a identificar dependências implícitas que podem passar despercebidas com `npm`/Yarn clássico.
 
-## Instalação do `pnpm` (Mac Apple Silicon)
+Ao mesmo tempo:
 
-Escolha **uma** forma de instalar e mantenha consistência no seu ambiente.
-
-### 1. Via `npm` (direto, funciona na maioria dos cenários)
-
-```bash
-npm install -g pnpm
-pnpm -v
-```
-
-### 2. Via Homebrew
-
-```bash
-brew install pnpm
-pnpm -v
-```
-
-### 3. Via Corepack (Node 18+, **somente se estiver estável no seu ambiente**)
-
-```bash
-corepack enable
-corepack prepare pnpm@latest --activate
-pnpm -v
-```
-
-Se uma abordagem der erro (por exemplo, Corepack com problema de assinatura), use outra (npm global ou Homebrew).
+- Os scripts seguem o padrão (`dev`, `build`, `test`).
+- Quem preferir pode usar `npm` sem travar.
 
 ---
 
-## Como rodar o projeto
+## Como rodar o frontend (jogo local)
 
 ### 1. Clonar o repositório
 
 ```bash
-git clone [https://github.com/jorgediasdsg/ultimate-ttt.git](https://github.com/jorgediasdsg/ultimate-ttt.git)
+git clone https://github.com/jorgediasdsg/ultimate-ttt.git
 cd ultimate-ttt
 ```
 
-### 2. Frontend (React)
+### 2. Instalar dependências do frontend
 
 Assumindo que o frontend está em `frontend/`:
 
 ```bash
 cd frontend
+
+# recomendado
 pnpm install
-pnpm dev
+
+# alternativa
+# npm install
 ```
 
-Alternativa com `npm`:
+### 3. Rodar em modo desenvolvimento
 
 ```bash
-npm install
-npm run dev
+# com pnpm
+pnpm dev
+
+# com npm
+# npm run dev
 ```
 
-Por padrão, o Vite roda em algo como:
+Por padrão, o Vite sobe em:
 
 ```text
-[http://localhost:5173](http://localhost:5173)
+http://localhost:5173
 ```
 
-(ajuste conforme a configuração do projeto).
+Abra no navegador e jogue duas pessoas no mesmo dispositivo, alternando X e Círculo de acordo com o indicador “Vez do Círculo / Vez do X”.
 
-### 3. Backend (Go)
+---
 
-Em outro terminal, na raiz do projeto ou em `backend/` (ajuste para o layout real):
+## Backend Go (quando for implementado)
+
+Quando o backend for implementado, a ideia é:
 
 ```bash
-cd backend   # ou . se o Go estiver na raiz
+cd backend
 go run ./cmd/server
 ```
 
-Depois disso, o servidor Go deve:
+O servidor Go deverá:
 
-* Servir o build do React em produção **ou**
-* Fazer proxy para o dev server do Vite, dependendo da fase em que o projeto estiver.
+- servir o build do frontend React em produção;
+- expor endpoints como:
+  - `/health` – checagem de status;
+  - futuros endpoints/WebSockets de jogo (multiplayer, bot).
 
-O endereço típico será:
+Endereço típico:
 
 ```text
-[http://localhost:8080](http://localhost:8080)
+http://localhost:8080
 ```
 
----
+Enquanto isso não estiver pronto:
 
-## Decisão: por que `pnpm`?
-
-Este projeto recomenda `pnpm` como gerenciador de pacotes do frontend pelos seguintes motivos:
-
-1. **Eficiência de disco**
-   `pnpm` utiliza um store global e links em vez de duplicar dependências em cada projeto, reduzindo bastante o uso de espaço.
-
-2. **Performance em múltiplos projetos**
-   Instalações repetidas em vários repositórios são significativamente mais rápidas do que com o npm tradicional.
-
-3. **Estrutura de `node_modules` mais correta**
-   O modelo de resolução de módulos é mais previsível e expõe dependências implícitas que às vezes passam despercebidas no npm/Yarn clássico.
-
-Apesar disso, para não criar barreira de entrada:
-
-* Todos os scripts seguem a convenção padrão (`dev`, `build`, `test`).
-* O projeto continua compatível com `npm`.
+- o backend aparece no código como **arquitetura planejada**;
+- o foco desta fase é consolidar:
+  - a lógica do jogo;
+  - a UI/UX local;
+  - o material de documentação (README + ADR).
 
 ---
 
-## Visão de arquitetura (alto nível)
+## Decisões técnicas (resumo)
 
-### Hoje – modo local (single device)
+- **Monolito Go + React**  
+  Em vez de partir direto para microserviços, o projeto começa como um monolito bem organizado:
+  - mais simples de rodar;
+  - mais fácil de explicar em entrevista;
+  - ainda assim preparado para crescer.
 
-* Toda a lógica do jogo roda no frontend React:
+- **Lógica de jogo inicialmente no frontend (TypeScript)**  
+  Garante uma versão jogável rapidamente, sem bloquear na engine server-side em Go.  
+  A arquitetura já considera a futura migração/espelhamento dessa lógica para o backend.
 
-  * tabuleiro macro/micro;
-  * regras de restrição de jogadas;
-  * vitória em micro e macro tabuleiro;
-  * modo sobrevivência (timer de 10s);
-  * ranking e nomes dos jogadores em `localStorage`.
-* O backend em Go:
+- **Vite usando o bundler estável (sem Rolldown)**  
+  Evita gastar tempo com problemas de tooling.  
+  O foco é demonstrar boas práticas de engenharia, não testar bundlers experimentais.
 
-  * serve o build estático do React;
-  * expõe endpoints básicos, como `/health` para checagem de status.
+- **`pnpm` como gerenciador preferencial, com `npm` suportado**  
+  Mostra familiaridade com tooling moderno, sem criar fricção para quem clona o repositório.
 
-### Amanhã – multiplayer e bot
-
-* O frontend passa a conversar com um **servidor Go remoto** por HTTP/WebSocket através de um `RemoteGameClient`.
-* O backend centraliza:
-
-  * estado das partidas (salas, jogadores conectados);
-  * validação das jogadas;
-  * lógica do bot/IA.
-* A engine de jogo em `internal/game` passa a ser a “fonte da verdade” das regras.
+Essas decisões estão descritas em mais detalhes no ADR inicial.
 
 ---
 
-## Roadmap técnico (resumido)
+## Roadmap técnico
 
-1. **Fase 1 – Local single-player**
+1. **Concluir Fase 1 (modo local “bem acabado”)**
+   - [ ] Tela para entrada de **nomes dos jogadores**, com:
+     - cache em `localStorage`;
+     - uso dos nomes na UI em vez de rótulos genéricos.
+   - [ ] Botão de **reiniciar partida** mantendo os nomes.
+   - [ ] Pequenos refinamentos de UX (feedback visual, mensagens de fim de jogo).
 
-   * UI completa em React.
-   * Lógica de jogo (Ultimate TTT) no frontend.
-   * Ranking em `localStorage`.
-   * Go servindo o build do frontend.
+2. **Ranking local (`localStorage`)**
+   - [ ] Modelo de dado para ranking:
+     - vencedor;
+     - perdedor;
+     - número de lances;
+     - data/hora da partida (opcional).
+   - [ ] Tela/painel de ranking:
+     - ordenado por vitórias com menos lances;
+     - possibilidade de limpar histórico.
 
-2. **Fase 2 – Protocolo de jogo**
+3. **Modo sobrevivência**
+   - [ ] Timer de 10 segundos por jogada:
+     - barra ou contador visual para tempo restante;
+     - ao estourar o tempo, passa a vez automaticamente.
+   - [ ] Configuração para ativar/desativar o modo sobrevivência.
 
-   * Definir mensagens JSON para representar estado de jogo e jogadas.
-   * Criar uma interface `GameClient` no frontend (`LocalGameClient` vs `RemoteGameClient`).
+4. **Protocolo de jogo e engine em Go**
+   - [ ] Definição de protocolo JSON para:
+     - estado de partida;
+     - jogada;
+     - mensagens de erro.
+   - [ ] Implementar engine de jogo em `backend/internal/game`, espelhando as regras do `core.ts`.
+   - [ ] Introduzir, no frontend, interface `GameClient`:
+     - `LocalGameClient`: implementação atual (estado no browser);
+     - `RemoteGameClient`: comunicação com o servidor Go.
 
-3. **Fase 3 – Multiplayer básico**
-
-   * Backend Go com rotas HTTP/WebSocket.
-   * `RemoteGameClient` no React usando o servidor Go.
-
-4. **Fase 4 – Bot / IA**
-
-   * Implementar um jogador bot em Go (`internal/ai`).
-   * Expor modo “vs bot” para o usuário escolher no frontend.
+5. **Multiplayer + Bot/IA**
+   - [ ] WebSocket/HTTP para sincronizar estado em tempo real entre dois clientes.
+   - [ ] Implementar bot em `backend/internal/ai`:
+     - heurísticas simples no início;
+     - espaço para lógica mais avançada/IA no futuro.
+   - [ ] Tela de escolha de modo:
+     - vs humano local;
+     - vs humano online;
+     - vs bot.
 
 ---
 
 ## ADRs (Architecture Decision Records)
 
-As decisões arquiteturais importantes são registradas em `docs/adr`.
+As decisões importantes de arquitetura são registradas em `docs/adr`.
 
-Exemplo de ADR inicial:
+- **ADR 0001 – Monolito Go + React para o Ultimate TTT (modo local, preparado para multiplayer/IA)**  
+  Registra:
+  - escolha do monolito Go + SPA React;
+  - uso de Vite estável sem Rolldown;
+  - lógica inicial no frontend;
+  - uso recomendado de `pnpm`;
+  - visão de evolução para multiplayer e bot.
 
-* `0001-monolith-go-react-local-game.md`
-  Decisão de usar um monolito em Go servindo um frontend React, com jogo local no browser e preparação explícita para multiplayer e bot.
+Novos ADRs devem ser criados para:
 
-Cada nova mudança relevante de arquitetura deve ser acompanhada por um novo ADR (ou atualização de ADR existente), sempre explicando:
-
-* contexto;
-* decisão;
-* alternativas consideradas;
-* consequências.
-
----
-
-## Scripts úteis
-
-### Frontend
-
-```bash
-
-# instalar dependências
-
-pnpm install
-
-# rodar em desenvolvimento
-
-pnpm dev
-
-# build para produção
-
-pnpm build
-
-# rodar testes (se configurado)
-
-pnpm test
-```
-
-### Backend
-
-```bash
-
-# rodar servidor Go
-
-go run ./cmd/server
-
-# rodar testes Go
-
-go test ./...
-```
+- protocolo de jogo;
+- engine em Go;
+- multiplayer e bot;
+- alterações relevantes de arquitetura ou tooling.
 
 ---
 
-## Contribuições / Evolução
+## Contribuições e evolução
 
-Este projeto é, ao mesmo tempo:
+Este projeto funciona como:
 
-* um laboratório de aprendizado em Go + React;
-* uma vitrine de boas práticas de engenharia.
+- um **laboratório de aprendizado** em Go + React;
+- uma **vitrine de práticas** que podem ser discutidas em entrevistas técnicas.
 
-Pull requests, issues e ADRs adicionais são bem-vindos, desde que:
+Sugestões, issues e PRs são bem-vindos, desde que:
 
-* descrevam claramente o problema/objetivo;
-* mantenham a coerência da arquitetura;
-* preservem a separação de responsabilidades entre frontend (UI/experiência) e backend (regra de negócio, multiplayer, IA).
+- expliquem claramente o problema/objetivo;
+- mantenham a coerência da arquitetura;
+- para mudanças relevantes, venham acompanhadas de um ADR (ou proposta de ADR) que documente:
+
+  - contexto;
+  - decisão;
+  - alternativas consideradas;
+  - consequências.
+
+A ideia é que o repositório sirva tanto como jogo divertido quanto como material de leitura para devs sênior e tech leads avaliando:
+
+- como decisões são tomadas;
+- como o código é estruturado;
+- como o sistema se prepara para crescer sem explodir em complexidade.
+
+```
