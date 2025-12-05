@@ -25,61 +25,65 @@ function App() {
   };
 
   const isCircleTurn = game.currentPlayer === 'O';
-  const currentLabel = isCircleTurn ? 'Vez do Círculo' : 'Vez do X';
+  const currentLabel = isCircleTurn ? 'VEZ DO CÍRCULO' : 'VEZ DO X';
   const currentPlayerClass = isCircleTurn
     ? 'current-player current-player--circle'
     : 'current-player current-player--x';
 
   return (
     <div className={`app app--${theme}`}>
-      <button className="theme-toggle" onClick={toggleTheme}>
-        Tema: {theme === 'dark' ? 'Escuro' : 'Claro'}
-      </button>
+      <div className="app-inner">
+        <button className="theme-toggle" onClick={toggleTheme}>
+          Tema: {theme === 'dark' ? 'Escuro' : 'Claro'}
+        </button>
 
-      <h1 className="app-title">Ultimate TTT</h1>
+        <h1 className="app-title">Ultimate TTT</h1>
 
-      <div className={currentPlayerClass}>{currentLabel}</div>
+        <div className={currentPlayerClass}>{currentLabel}</div>
 
-      <div className="board">
-        {game.macroBoard.boards.map((board, boardIndex) => {
-          const isAllowed = allowedBoards.includes(boardIndex);
-          const winner = board.winner;
+        <div className="board">
+          {game.macroBoard.boards.map((board, boardIndex) => {
+            const isAllowed = allowedBoards.includes(boardIndex);
+            const winner = board.winner;
 
-          let microClasses = 'micro-board';
-          if (isAllowed) microClasses += ' micro-board--allowed';
-          if (winner === 'X') microClasses += ' micro-board--winner-X';
-          if (winner === 'O') microClasses += ' micro-board--winner-O';
+            let microClasses = 'micro-board';
+            // primeiro quem venceu
+            if (winner === 'X') microClasses += ' micro-board--winner-X';
+            if (winner === 'O') microClasses += ' micro-board--winner-O';
+            // por último, o campo jogável (sempre manda na cor)
+            if (isAllowed) microClasses += ' micro-board--allowed';
 
-          return (
-            <div key={boardIndex} className={microClasses}>
-              <div className="micro-board-grid">
-                {board.cells.map((cell, cellIndex) => {
-                  let cellClass = 'cell-btn';
-                  if (cell === 'X') cellClass += ' cell-btn--X';
-                  if (cell === 'O') cellClass += ' cell-btn--O';
+            return (
+              <div key={boardIndex} className={microClasses}>
+                <div className="micro-board-grid">
+                  {board.cells.map((cell, cellIndex) => {
+                    let cellClass = 'cell-btn';
+                    if (cell === 'X') cellClass += ' cell-btn--X';
+                    if (cell === 'O') cellClass += ' cell-btn--O';
 
-                  return (
-                    <button
-                      key={cellIndex}
-                      className={cellClass}
-                      onClick={() => handleCellClick(boardIndex, cellIndex)}
-                    >
-                      {cell ?? ''}
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={cellIndex}
+                        className={cellClass}
+                        onClick={() => handleCellClick(boardIndex, cellIndex)}
+                      >
+                        {cell ?? ''}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {game.isGameOver && game.macroBoard.winner && (
-        <div className="game-over">
-          Fim de jogo! Venceu o{' '}
-          {game.macroBoard.winner === 'O' ? 'Círculo' : 'X'}
+            );
+          })}
         </div>
-      )}
+
+        {game.isGameOver && game.macroBoard.winner && (
+          <div className="game-over">
+            Fim de jogo! Venceu o{' '}
+            {game.macroBoard.winner === 'O' ? 'Círculo' : 'X'}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
